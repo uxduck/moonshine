@@ -48,8 +48,10 @@ SOFTWARE.
 
 #include "bin-tokenizer.h"
 #include "debug-utils.h"
+#ifndef MOONSHINE_DISABLE_INTENT
 #include "gemma-embedding-model.h"
 #include "intent-recognizer.h"
+#endif
 #include "moonshine-model.h"
 #include "moonshine-ort-allocator.h"
 #include "moonshine-tensor-view.h"
@@ -375,6 +377,7 @@ int32_t moonshine_transcribe_stream(int32_t transcriber_handle,
   return MOONSHINE_ERROR_NONE;
 }
 
+#ifndef MOONSHINE_DISABLE_INTENT
 /* ------------------------------ INTENT RECOGNIZER ------------------------- */
 
 namespace {
@@ -605,3 +608,4 @@ int32_t moonshine_clear_intents(int32_t intent_recognizer_handle) {
   }
   return MOONSHINE_ERROR_NONE;
 }
+#endif  // MOONSHINE_DISABLE_INTENT

@@ -54,8 +54,10 @@ size_t vad_sample_count_from_duration(float duration) {
 Transcriber::Transcriber(const TranscriberOptions &options)
     : stt_model(nullptr),
       streaming_model(nullptr),
+#ifndef MOONSHINE_DISABLE_SPEAKER_ID
       speaker_embedding_model(nullptr),
       next_speaker_index(0),
+#endif
       next_stream_id(1) {
   this->options = options;
   // Start with a random 64-bit value as a unique identifier. We increment
@@ -79,6 +81,7 @@ Transcriber::Transcriber(const TranscriberOptions &options)
     throw std::runtime_error("Invalid model source: " +
                              std::to_string((int)(model_source)));
   }
+#ifndef MOONSHINE_DISABLE_SPEAKER_ID
   if (options.identify_speakers) {
     this->speaker_embedding_model = new SpeakerEmbeddingModel();
     int load_error = this->speaker_embedding_model->load_from_memory(
@@ -93,6 +96,7 @@ Transcriber::Transcriber(const TranscriberOptions &options)
         {.embedding_size = SpeakerEmbeddingModel::embedding_size,
          .threshold = this->options.speaker_id_cluster_threshold}));
   }
+#endif
 }
 
 void Transcriber::load_from_files(const char *model_path, uint32_t model_arch) {
@@ -194,8 +198,10 @@ void Transcriber::load_from_memory(const uint8_t *encoder_model_data,
 Transcriber::~Transcriber() {
   delete this->stt_model;
   delete this->streaming_model;
+#ifndef MOONSHINE_DISABLE_SPEAKER_ID
   delete this->speaker_embedding_model;
   delete this->online_clusterer;
+#endif
   for (auto &stream : this->streams) {
     delete stream.second;
   }
@@ -459,6 +465,7 @@ void Transcriber::update_transcript_from_segments(
     if (this->options.return_audio_data) {
       line.audio_data = segment.audio_data;
     }
+#ifndef MOONSHINE_DISABLE_SPEAKER_ID
     if (this->options.identify_speakers && !line.has_speaker_id) {
       const bool long_enough_to_analyze =
           segment.audio_data.size() >= SpeakerEmbeddingModel::ideal_input_size;
@@ -486,6 +493,7 @@ void Transcriber::update_transcript_from_segments(
         }
       }
     }
+#endif
     stream->transcript_output->add_or_update_line(line);
   }
   const bool is_stopped = !stream->vad->is_active();

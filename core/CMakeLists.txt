@@ -41,21 +41,34 @@ if (ANDROID)
     )
 endif()
 
+option(MOONSHINE_DISABLE_SPEAKER_ID "Disable speaker identification" OFF)
+option(MOONSHINE_DISABLE_INTENT "Disable intent recognition" OFF)
+
 set(MOONSHINE_SRC_FILES
     moonshine-c-api.cpp
-    cosine-distance.cpp
     moonshine-model.cpp
     moonshine-streaming-model.cpp
     voice-activity-detector.cpp
-    silero-vad.cpp
     resampler.cpp
     transcriber.cpp
-    gemma-embedding-model.cpp
-    intent-recognizer.cpp
-    speaker-embedding-model.cpp
-    speaker-embedding-model-data.cpp
-    online-clusterer.cpp
+    silero-vad.cpp
 )
+
+if(NOT MOONSHINE_DISABLE_SPEAKER_ID)
+    list(APPEND MOONSHINE_SRC_FILES
+        cosine-distance.cpp
+        speaker-embedding-model.cpp
+        speaker-embedding-model-data.cpp
+        online-clusterer.cpp
+    )
+endif()
+
+if(NOT MOONSHINE_DISABLE_INTENT)
+    list(APPEND MOONSHINE_SRC_FILES
+        gemma-embedding-model.cpp
+        intent-recognizer.cpp
+    )
+endif()
 
 # Build as STATIC framework for iOS/Swift (shared frameworks cannot be embedded)
 # Build as SHARED library for other platforms
@@ -74,6 +87,13 @@ set_target_properties(moonshine PROPERTIES
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
+
+if(MOONSHINE_DISABLE_SPEAKER_ID)
+    target_compile_definitions(moonshine PRIVATE MOONSHINE_DISABLE_SPEAKER_ID)
+endif()
+if(MOONSHINE_DISABLE_INTENT)
+    target_compile_definitions(moonshine PRIVATE MOONSHINE_DISABLE_INTENT)
+endif()
 
 # On macOS (non-framework builds), set rpath to @loader_path so the library looks for dependencies
 # (like libonnxruntime) in the same directory as libmoonshine.dylib
