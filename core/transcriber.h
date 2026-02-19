@@ -13,9 +13,11 @@
 #include "moonshine-model.h"
 #include "moonshine-streaming-model.h"
 #include "voice-activity-detector.h"
+#ifndef MOONSHINE_DISABLE_SPEAKER_ID
 #include "speaker-embedding-model.h"
 #include "speaker-embedding-model-data.h"
 #include "online-clusterer.h"
+#endif
 
 struct TranscriberLine {
   std::string *text = nullptr;
@@ -126,11 +128,13 @@ class Transcriber {
   MoonshineStreamingState streaming_state;
   std::mutex streaming_model_mutex;
 
+#ifndef MOONSHINE_DISABLE_SPEAKER_ID
   SpeakerEmbeddingModel *speaker_embedding_model;
   std::mutex speaker_embedding_model_mutex;
   OnlineClusterer *online_clusterer;
   uint32_t next_speaker_index = 0;
   std::map<uint64_t, uint32_t> speaker_index_map;
+#endif
 
   // Track current segment for incremental processing
   uint64_t current_streaming_segment_id = UINT64_MAX;
